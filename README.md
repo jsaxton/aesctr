@@ -8,5 +8,7 @@ Based off my limited testing, this script works in aes-128-ctr mode. It can easi
 Syntax 
 ======
 ./aesctr.py [-d|-e] <input file> <output file> <key> <iv>
+
 Key and IV are expected to be 128 bit hex strings (32 characters, no preceeding 0x)
+
 -d flag is used to decrypt, -e flag is used to encrypt
