@@ -8,7 +8,7 @@ BLOCK_SIZE = 16
 
 # TODO: Better argument parsing
 if len(sys.argv) != 6:
-    print "Syntax: " + sys.argv[0] + "[-d|-e] <input file> <output file> <key> <iv>"
+    print "Syntax: " + sys.argv[0] + " [-d|-e] <input file> <output file> <key> <iv>"
     print "Key and IV are expected to be 128 bit hex strings (32 characters, no preceeding 0x)"
     print "-d flag is used to decrypt, -e flag is used to encrypt"
     sys.exit(1)
@@ -38,7 +38,7 @@ if len(iv) != BLOCK_SIZE * 2:
 
 inFile = open(inFilename, "rb")
 outFile = open(outFilename, "wb")
-ctr = Crypto.Util.Counter.new(BLOCK_SIZE*8, initial_value=long(iv, 16)) # TODO: Use real IV
+ctr = Crypto.Util.Counter.new(BLOCK_SIZE*8, initial_value=long(iv, 16))
 cipher = Crypto.Cipher.AES.new(key.decode("hex"), Crypto.Cipher.AES.MODE_CTR, counter=ctr)
 
 while encrypt:
