@@ -4,47 +4,53 @@ import Crypto.Cipher.AES
 import Crypto.Util.Counter
 import sys
 
-# Functions to provide PKCS5 Padding
-# Taken from http://stackoverflow.com/a/13893208/2748059
-BS = 16
-pad = lambda s: s + (BS - len(s) % BS) * chr(BS - len(s) % BS) 
-unpad = lambda s : s[0:-ord(s[-1])]
+BLOCK_SIZE = 16
 
-encrypt = False
-decrypt = True
-
-if len(sys.argv) != 5:
-    print "Syntax: " + sys.argv[0] + " <input file> <output file> <16 byte key> + <16 byte IV>"
+# TODO: Better argument parsing
+if len(sys.argv) != 6:
+    print "Syntax: " + sys.argv[0] + "[-d|-e] <input file> <output file> <key> <iv>"
+    print "Key and IV are expected to be 128 bit hex strings (32 characters, no preceeding 0x)"
+    print "-d flag is used to decrypt, -e flag is used to encrypt"
     sys.exit(1)
 
-inFilename = sys.argv[1]
-outFilename = sys.argv[2]
-key = sys.argv[3]
-iv = sys.argv[4]
-
-if len(key) != 16:
-    print "Key must be 16 bytes in length"
+if sys.argv[1] == '-d':
+    encrypt = False
+    decrypt = True
+elif sys.argv[1] == '-e':
+    encrypt = True
+    decrypt = False
+else:
+    print "First argument must be -d (decrypt) or -e (encrypt)"
     sys.exit(1)
 
-if len(iv) != 16:
-    print "IV must be 16 bytes in length"
+inFilename = sys.argv[2]
+outFilename = sys.argv[3]
+key = sys.argv[4]
+iv = sys.argv[5]
+
+if len(key) != BLOCK_SIZE * 2:
+    print "Key must be " + BLOCK_SIZE + " bytes in length"
+    sys.exit(1)
+
+if len(iv) != BLOCK_SIZE * 2:
+    print "IV must be " + BLOCK_SIZE + " bytes in length"
     sys.exit(1)
 
 inFile = open(inFilename, "rb")
 outFile = open(outFilename, "wb")
-ctr = Crypto.Util.Counter.new(128, initial_value=long(iv.encode("hex"), 16))
-cipher = Crypto.Cipher.AES.new(key, Crypto.Cipher.AES.MODE_CTR, counter=ctr)
+ctr = Crypto.Util.Counter.new(BLOCK_SIZE*8, initial_value=long(iv, 16)) # TODO: Use real IV
+cipher = Crypto.Cipher.AES.new(key.decode("hex"), Crypto.Cipher.AES.MODE_CTR, counter=ctr)
 
 while encrypt:
-    chunk = inFile.read(16)
+    chunk = inFile.read(BLOCK_SIZE)
     if chunk:
-        outFile.write(cipher.encrypt(pad(chunk)))
+        outFile.write(cipher.encrypt(chunk))
     else:
         break
 
 while decrypt:
-    chunk = inFile.read(16)
+    chunk = inFile.read(BLOCK_SIZE)
     if chunk:
-        outFile.write(unpad(cipher.decrypt(chunk)))
+        outFile.write(cipher.decrypt(chunk))
     else:
         break
